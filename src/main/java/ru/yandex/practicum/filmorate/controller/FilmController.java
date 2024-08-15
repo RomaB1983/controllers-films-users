@@ -46,7 +46,7 @@ public class FilmController {
 
     private void checkDescription(Film film) {
         log.debug("Проверка на корректность заполнения описание: {}", film.getDescription());
-        if (film.getDescription().length() > MAX_LENGTH_DESCRIPTION) {
+        if (film.getDescription() != null && film.getDescription().length() > MAX_LENGTH_DESCRIPTION) {
             log.error("Описание фильма не может быть больше {} символов", MAX_LENGTH_DESCRIPTION);
             throw new ValidationException("Описание фильма не может быть больше " + MAX_LENGTH_DESCRIPTION + " символов");
         }
