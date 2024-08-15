@@ -6,18 +6,19 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UserControllerTest {
     UserController userController = new UserController();
     User user;
 
     @BeforeEach
-     void init() {
+    void init() {
         user = new User();
+        user.setId(1L);
         user.setName("name");
         user.setLogin("login");
         user.setEmail("email@email.ru");
@@ -27,48 +28,48 @@ public class UserControllerTest {
     @Test
     void thrownIsWhitespaceEmail() {
         user.setEmail(" ");
-        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+        assertEquals(assertThrows(ValidationException.class, () -> userController.create(user)).getMessage(), "e-mail указан некорретно");
     }
 
     @Test
     void thrownIsEmptyEmail() {
         user.setEmail(null);
-        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+        assertEquals(assertThrows(ValidationException.class, () -> userController.create(user)).getMessage(), "e-mail указан некорретно");
     }
 
     @Test
     void thrownIsFailEmail() {
         user.setEmail("asdfsad");
-        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+        assertEquals(assertThrows(ValidationException.class, () -> userController.create(user)).getMessage(), "e-mail указан некорретно");
     }
 
     @Test
     void notThrownIsGoodEmail() {
         user.setEmail("asdfsad@mail.ru");
-        assertDoesNotThrow( () -> userController.validateUser(user));
+        assertDoesNotThrow(() -> userController.create(user));
     }
 
     @Test
     void throwIsEmptyLogin() {
         user.setLogin(null);
-        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+        assertEquals(assertThrows(ValidationException.class, () -> userController.create(user)).getMessage(), "Логин не может быть пустым и не должен содержать пробелов");
     }
 
     @Test
     void throwIsSpaceInLogin() {
         user.setLogin("log in");
-        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+        assertEquals(assertThrows(ValidationException.class, () -> userController.create(user)).getMessage(), "Логин не может быть пустым и не должен содержать пробелов");
     }
 
     @Test
     void throwIsBirtdayInFuture() {
         user.setBirthday(LocalDate.parse("2033-01-01"));
-        assertThrows(ValidationException.class, () -> userController.validateUser(user));
+        assertEquals(assertThrows(ValidationException.class, () -> userController.create(user)).getMessage(), "Дата \"2033-01-01\" рождения не может быть в будущем");
     }
 
     @Test
     void notThrowIsBirtdayInPast() {
         user.setBirthday(LocalDate.parse("2019-01-01"));
-        assertDoesNotThrow( () -> userController.validateUser(user));
+        assertDoesNotThrow(() -> userController.create(user));
     }
 }

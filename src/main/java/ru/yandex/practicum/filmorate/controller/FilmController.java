@@ -18,7 +18,7 @@ import java.util.Map;
 public class FilmController {
 
     private final Map<Long, Film> films = new HashMap<>();
-    public final static LocalDate MIN_DATE_RELEASE = LocalDate.parse("1895-12-28", DateTimeFormatter.ISO_LOCAL_DATE);
+    private final static LocalDate MIN_DATE_RELEASE = LocalDate.parse("1895-12-28", DateTimeFormatter.ISO_LOCAL_DATE);
     private final static Integer MAX_LENGTH_DESCRIPTION = 200;
 
     @GetMapping
@@ -36,27 +36,44 @@ public class FilmController {
         return film;
     }
 
-    public void validateFilm(Film film) {
-        log.debug("Проверка на корректность заполнения полей для фильма: {}", film);
+    private void checkName(Film film) {
+        log.debug("Проверка на корректность заполнения наименования: {}", film.getName());
         if (film.getName() == null || film.getName().isBlank()) {
             log.error("Наименование фильма не может быть пустым");
             throw new ValidationException("Наименование фильма не может быть пустым");
         }
+    }
 
+    private void checkDescription(Film film) {
+        log.debug("Проверка на корректность заполнения описание: {}", film.getDescription());
         if (film.getDescription().length() > MAX_LENGTH_DESCRIPTION) {
             log.error("Описание фильма не может быть больше {} символов", MAX_LENGTH_DESCRIPTION);
             throw new ValidationException("Описание фильма не может быть больше " + MAX_LENGTH_DESCRIPTION + " символов");
         }
+    }
 
-        if (film.getReleaseDate().isBefore(MIN_DATE_RELEASE)) {
+    private void checkReleaseDate(Film film) {
+        log.debug("Проверка на корректность заполнения описания: {}", film.getDescription());
+        if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(MIN_DATE_RELEASE)) {
             log.error("Дата фильма \"{}\" не может быть ранее {}", film.getReleaseDate(), MIN_DATE_RELEASE);
             throw new ValidationException("Дата фильма \"" + film.getReleaseDate() + "\" не может быть ранее " + MIN_DATE_RELEASE);
         }
+    }
 
-        if (film.getDuration() < 0) {
+    private void checkDuration(Film film) {
+        log.debug("Проверка на корректность заполнения длительности: {}", film.getDuration());
+        if (film.getDuration() != null && film.getDuration() < 0) {
             log.error("Продолжительность фильма не может быть < 0");
             throw new ValidationException("Продолжительность фильма не может быть < 0");
         }
+    }
+
+    private void validateFilm(Film film) {
+        log.debug("Проверка на корректность заполнения полей для фильма: {}", film);
+        checkName(film);
+        checkDescription(film);
+        checkReleaseDate(film);
+        checkDuration(film);
     }
 
     @PutMapping
@@ -66,16 +83,25 @@ public class FilmController {
             log.error("Id фильма должен быть указан");
             throw new ValidationException("Id фильма должен быть указан");
         }
-        validateFilm(newFilm);
 
         if (films.containsKey(newFilm.getId())) {
             log.debug("нашли фильм: " + newFilm);
             Film oldFilm = films.get(newFilm.getId());
-            oldFilm.setName(newFilm.getName());
-            oldFilm.setDescription(newFilm.getDescription());
-            oldFilm.setDuration(newFilm.getDuration());
-            oldFilm.setReleaseDate(newFilm.getReleaseDate());
-
+            if (newFilm.getName() != null) {
+                checkName(newFilm);
+                oldFilm.setName(newFilm.getName());
+            }
+            if (newFilm.getDescription() != null) {
+                oldFilm.setDescription(newFilm.getDescription());
+            }
+            if (newFilm.getDuration() != null) {
+                checkDuration(newFilm);
+                oldFilm.setDuration(newFilm.getDuration());
+            }
+            if (newFilm.getReleaseDate() != null) {
+                checkReleaseDate(newFilm);
+                oldFilm.setReleaseDate(newFilm.getReleaseDate());
+            }
             log.debug("Фильм {} успешно обновлен", oldFilm);
             return oldFilm;
         }
